@@ -1,3 +1,6 @@
+# Development environment
+.idea/
+
 # Logs
 logs
 *.log
