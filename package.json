@@ -1,7 +1,7 @@
 {
-  "name": "puppeteer",
-  "version": "0.0.2",
-  "description": "Puppeter interface for Marvin",
+  "name": "marvin",
+  "version": "0.1.0",
+  "description": "NAT64Check Marvin",
   "scripts": {
     "debug": "env DEBUG='puppeteer:*' node main.js",
     "start": "node main.js"
@@ -13,6 +13,6 @@
     "express": "^4.16.2",
     "moment": "^2.22.0",
     "net-ping": "^1.2.1",
-    "puppeteer": "^1.2.0"
+    "puppeteer": "^1.4.0"
   }
 }
