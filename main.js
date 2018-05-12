@@ -132,4 +132,16 @@ app.post("/die", async (request, response) => {
 
     server = await app.listen(port, listen_address);
     console.log("Puppeteer listening on", listen_address, "port", port);
+
+    process.on('SIGINT', async () => {
+        console.log("Caught interrupt signal, finishing running tests");
+        await server.close();
+        console.log("Exiting after catching interrupt signal")
+    });
+
+    process.on('SIGTERM', async () => {
+        console.log("Caught termination signal, finishing running tests");
+        await server.close();
+        console.log("Exiting after catching termination signal")
+    });
 })();
