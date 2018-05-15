@@ -6,7 +6,6 @@ const defaultGateway = require("default-gateway");
 
 const getInfo = require("./handlers/info");
 const postRequest = require("./handlers/request");
-const postDie = require("./handlers/die");
 const getSelfTest = require("./handlers/self_test");
 
 const config = require("./config");
@@ -52,10 +51,6 @@ app.get("/info", async (request, response) => {
 
 app.get("/self-test", async (request, response) => {
     await getSelfTest(request, response, browser, marvin, config);
-});
-
-app.post("/die", async (request, response) => {
-    await postDie(request, response, server);
 });
 
 (async () => {
