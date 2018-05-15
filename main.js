@@ -13,6 +13,10 @@ const config = require("./config");
 const port = config.puppeteer.port;
 const listen_address = config.puppeteer.host;
 
+/**
+ * The HTTP server
+ * @type {{use: Function, get: Function, post: Function}}
+ */
 const app = express();
 app.use(express.json()); // for parsing application/json
 
@@ -26,8 +30,8 @@ let marvin = {
     ipv6_addresses: [],
     ipv4_gateway: '',
     ipv6_gateway: '',
-    dns_servers: dns.getServers(),
-    hostname: os.hostname(),
+    dns_servers: [],
+    hostname: '',
 };
 
 // Processing counters
@@ -100,10 +104,15 @@ app.post("/die", async (request, response) => {
         marvin.ipv6_gateway = null;
     }
 
+    // noinspection JSUnresolvedFunction
+    marvin.dns_servers = dns.getServers();
+    marvin.hostname = os.hostname();
+
     const have_ipv4 = marvin.ipv4_addresses && marvin.ipv4_gateway;
     const have_ipv6 = marvin.ipv6_addresses && marvin.ipv6_gateway;
 
     try {
+        // noinspection JSUnresolvedFunction
         await dns.resolve6("ipv4only.arpa.");
 
         // Lookup successful: ipv4only has IPv6 addresses: DNS64
