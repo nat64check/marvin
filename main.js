@@ -1,12 +1,13 @@
 const Puppeteer = require("puppeteer");
 const express = require("express");
 const os = require("os");
-const dns = require("dns-then");
+const dns = require("dns");
 const defaultGateway = require("default-gateway");
+const {promisify} = require('util');
 
-const getInfo = require("./handlers/info");
-const postRequest = require("./handlers/request");
-const getSelfTest = require("./handlers/self_test");
+const {getInfo} = require("./handlers/info");
+const {postRequest} = require("./handlers/request");
+const {getSelfTest} = require("./handlers/self_test");
 
 const config = require("./config");
 const port = config.puppeteer.port;
@@ -108,7 +109,7 @@ app.get("/self-test", async (request, response) => {
 
     try {
         // noinspection JSUnresolvedFunction
-        await dns.resolve6("ipv4only.arpa.");
+        await promisify(dns.resolve6)("ipv4only.arpa.");
 
         // Lookup successful: ipv4only has IPv6 addresses: DNS64
         console.log("ipv4only.arpa has IPv6 addresses: assuming NAT64");

@@ -31,4 +31,6 @@ async function getSelfTest(request, response, browser, marvin, config) {
     }
 }
 
-module.exports = getSelfTest;
+module.exports = {
+    getSelfTest
+};

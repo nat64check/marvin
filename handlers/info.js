@@ -64,4 +64,6 @@ async function getInfo(request, response, browser, marvin, config, activity) {
     }
 }
 
-module.exports = getInfo;
+module.exports = {
+    getInfo
+};

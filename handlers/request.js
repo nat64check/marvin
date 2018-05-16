@@ -203,4 +203,6 @@ async function postRequest(request, response, browser, marvin, config, activity)
     }
 }
 
-module.exports = postRequest;
+module.exports = {
+    postRequest
+};
