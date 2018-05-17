@@ -101,7 +101,7 @@ async function postPing(family, request, response, marvin, config, activity) {
             } else if (err.code === "EBADNAME") {
                 return sendError(response, "Invalid target hostname", 400, options.target);
             } else if (err.code === "ESERVFAIL") {
-                return sendError(response, "Server error wile resolving target hostname", 400, options.target);
+                return sendError(response, "Server error while resolving target hostname", 400, options.target);
             } else {
                 return sendError(response, "Unable to resolve target hostname", 400, err);
             }
