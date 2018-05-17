@@ -11,12 +11,12 @@ async function pingOnce(session, target) {
             if (err) {
                 // Errors are also valid results
                 setTimeout(resolve, 1, {
-                    status: err.name || err.message,
+                    status: err.message.toLowerCase(),
                     latency: null,
                 });
             } else {
                 setTimeout(resolve, 1, {
-                    status: "Ok",
+                    status: "ok",
                     latency: rcvd - sent,
                 });
             }
