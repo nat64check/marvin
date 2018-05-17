@@ -135,7 +135,7 @@ async function postRequest(request, response, browser, marvin, config, activity)
         // Sanity check
         if (!url) {
             activity.failed_tasks++;
-            return sendError(response, "url is a required request parameter");
+            return sendError(response, "url is a required request parameter", 400);
         }
 
         // Check load limits
