@@ -8,6 +8,7 @@ const {promisify} = require('util');
 const {getInfo} = require("./handlers/info");
 const {postRequest} = require("./handlers/request");
 const {getSelfTest} = require("./handlers/self_test");
+const {postPing} = require('./handlers/ping');
 
 const config = require("./config");
 const port = config.puppeteer.port;
@@ -48,6 +49,14 @@ app.post("/request", async (request, response) => {
 
 app.get("/info", async (request, response) => {
     await getInfo(request, response, browser, marvin, config, activity);
+});
+
+app.post("/ping/", async (request, response) => {
+    await postPing(4, request, response, marvin, config, activity);
+});
+
+app.post("/ping6/", async (request, response) => {
+    await postPing(6, request, response, marvin, config, activity);
 });
 
 app.get("/self-test", async (request, response) => {
