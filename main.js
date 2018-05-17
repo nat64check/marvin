@@ -108,7 +108,7 @@ app.get("/self-test", async (request, response) => {
     const have_ipv6 = marvin.ipv6_addresses && marvin.ipv6_gateway;
 
     try {
-        // noinspection JSUnresolvedFunction
+        // noinspection JSUnresolvedVariable
         await promisify(dns.resolve6)("ipv4only.arpa.");
 
         // Lookup successful: ipv4only has IPv6 addresses: DNS64
