@@ -81,11 +81,11 @@ async function postPing(family, request, response, marvin, config, activity) {
         if (family === 4) {
             // noinspection JSUnresolvedVariable
             resolver = promisify(dns.resolve4);
-            payloadSize = options.size - 36;
+            payloadSize = options.size - 20;
         } else if (family === 6) {
             // noinspection JSUnresolvedVariable
             resolver = promisify(dns.resolve6);
-            payloadSize = options.size - 48;
+            payloadSize = options.size - 40;
         } else {
             return sendError(response, "Unknown address family", 500, family);
         }
