@@ -1,6 +1,6 @@
 {
   "name": "marvin",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "NAT64Check Marvin",
   "scripts": {
     "debug": "env DEBUG='puppeteer:*' node main.js",
@@ -9,7 +9,6 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "default-gateway": "^2.7.0",
-    "dns-then": "^0.1.0",
     "express": "^4.16.2",
     "moment": "^2.22.0",
     "net-ping": "^1.2.1",
