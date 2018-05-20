@@ -1,7 +1,7 @@
 const dns = require("dns");
 const ping = require("net-ping");
-const sendError = require("../utils/send_error");
 const {promisify} = require("util");
+const {ClientError, ServerError} = require("../utils");
 
 async function pingOnce(session, target) {
     return new Promise(resolve => {
@@ -36,103 +36,91 @@ async function pingHost(session, target, count) {
     return Promise.all(requests);
 }
 
-function parseOptions(body) {
+function parsePingRequest(request) {
     let options = {};
 
     // Parse input
     try {
-        options.target = String(body.target || "").trim();
-        options.size = Number(body.size) || 56;
-        options.count = Number(body.count) || 5;
-        options.timeout = Number(body.timeout) || 1000;
+        options.target = String(request.body.target || "").trim();
+        options.size = Number(request.body.size) || 56;
+        options.count = Number(request.body.count) || 5;
+        options.timeout = Number(request.body.timeout) || 1000;
     }
     catch (err) {
-        throw new Error("Error parsing ping4 request");
+        throw new ClientError("Error parsing ping4 request", err);
     }
 
     // Sanity check
     if (!options.target) {
-        throw new Error("target is a required request parameter");
+        throw new ClientError("target is a required request parameter", options);
     }
     if (options.size < 56 || options.size > 65535) {
-        throw new Error("size must be between 56 and 65535");
+        throw new ClientError("size must be between 56 and 65535", options);
     }
     if (options.count < 1 || options.count > 10) {
-        throw new Error("count must be between 1 and 10");
+        throw new ClientError("count must be between 1 and 10", options);
     }
     if (options.timeout < 100 || options.timeout > 10000) {
-        throw new Error("timeout must be between 100 and 10000");
+        throw new ClientError("timeout must be between 100 and 10000", options);
     }
 
     return options;
 }
 
-async function postPing(family, request, response, marvin, config, activity) {
-    let address, addresses, resolver, options, payloadSize;
+async function doPing(family, options) {
+    let address, addresses, resolver, payloadSize;
+
+    if (family === 4) {
+        // noinspection JSUnresolvedVariable
+        resolver = promisify(dns.resolve4);
+        payloadSize = options.size - 20;
+    } else if (family === 6) {
+        // noinspection JSUnresolvedVariable
+        resolver = promisify(dns.resolve6);
+        payloadSize = options.size - 40;
+    } else {
+        throw new ServerError("Unknown address family", family);
+    }
+
+    console.log("Pinging IPv" + family + ": " + options.target);
 
     try {
-        try {
-            options = parseOptions(request.body);
-        } catch (err) {
-            activity.failed_tasks++;
-            return sendError(response, err.message, 400);
-        }
-
-        if (family === 4) {
-            // noinspection JSUnresolvedVariable
-            resolver = promisify(dns.resolve4);
-            payloadSize = options.size - 20;
-        } else if (family === 6) {
-            // noinspection JSUnresolvedVariable
-            resolver = promisify(dns.resolve6);
-            payloadSize = options.size - 40;
-        } else {
-            return sendError(response, "Unknown address family", 500, family);
-        }
-
-        console.log("Pinging IPv" + family + ": " + options.target);
-
-        try {
-            addresses = await resolver(options.target);
-            address = addresses[Math.floor(Math.random() * addresses.length)];
-        } catch (err) {
-            if (err.code === "ENOTFOUND") {
-                return sendError(response, "Target does not exist", 400, options.target);
-            } else if (err.code === "EBADNAME") {
-                return sendError(response, "Invalid target hostname", 400, options.target);
-            } else if (err.code === "ESERVFAIL") {
-                return sendError(response, "Server error while resolving target hostname", 400, options.target);
-            } else {
-                return sendError(response, "Unable to resolve target hostname", 400, err);
-            }
-        }
-
-        if (!address) {
-            return sendError(response, "No IPv" + family + " addresses found", 400);
-        }
-
-        // noinspection JSUnresolvedVariable
-        let session = ping.createSession({
-            networkProtocol: family === 4 ? ping.NetworkProtocol.IPv4 : ping.NetworkProtocol.IPv6,
-            packetSize: payloadSize,
-            retries: 0,
-            timeout: options.timeout,
-        });
-
-        let results = await pingHost(session, address, options.count);
-        response.send({
-            request: options,
-            address,
-            success: true,
-            reason: "Test completed",
-            results,
-        });
+        addresses = await resolver(options.target);
+        address = addresses[Math.floor(Math.random() * addresses.length)];
     }
     catch (err) {
-        sendError(response, "IPv" + family + " ping failed", 500, err);
+        if (err.code === "ENOTFOUND") {
+            throw new ClientError("Target does not exist", options.target);
+        } else if (err.code === "EBADNAME") {
+            throw new ClientError("Invalid target hostname", options.target);
+        } else if (err.code === "ESERVFAIL") {
+            throw new ClientError("Server error while resolving target hostname", options.target);
+        } else {
+            throw new ClientError("Unable to resolve target hostname", err);
+        }
     }
+
+    if (!address) {
+        throw new ClientError("No IPv" + family + " addresses found");
+    }
+
+    // noinspection JSUnresolvedVariable
+    let session = ping.createSession({
+        networkProtocol: family === 4 ? ping.NetworkProtocol.IPv4 : ping.NetworkProtocol.IPv6,
+        packetSize: payloadSize,
+        retries: 0,
+        timeout: options.timeout,
+    });
+
+    let results = await pingHost(session, address, options.count);
+    return {
+        request: options,
+        address,
+        results,
+    };
 }
 
 module.exports = {
-    postPing,
+    parsePingRequest,
+    doPing,
 };

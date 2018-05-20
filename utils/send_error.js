@@ -1,3 +1,13 @@
+const {MarvinError} = require("./exceptions");
+
+/**
+ * Send an error to the client
+ *
+ * @param {Response} response
+ * @param {string} message
+ * @param {number} [code]
+ * @param {*|object} [reason]
+ */
 function sendError(response, message, code, reason) {
     if (reason) {
         console.error("ERROR: " + message + " (" + reason + ")");
@@ -11,4 +21,21 @@ function sendError(response, message, code, reason) {
     });
 }
 
-module.exports = sendError;
+/**
+ * Send an error based on an exception to the client
+ *
+ * @param {Response} response
+ * @param {Error} error
+ */
+function sendException(response, error) {
+    if (error instanceof MarvinError) {
+        sendError(response, error.message, error.httpStatus, error.reason);
+    } else {
+        sendError(response, error.message);
+    }
+}
+
+module.exports = {
+    sendError,
+    sendException,
+};

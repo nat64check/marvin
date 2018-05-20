@@ -1,5 +1,6 @@
 const moment = require("moment");
-const sendError = require("../utils/send_error");
+const http = require("http");
+const {ClientError} = require("../utils");
 
 async function getBrowserPage(resources, messages, browser, pageStart) {
     const page = await browser.newPage();
@@ -28,8 +29,9 @@ async function getBrowserPage(resources, messages, browser, pageStart) {
 
     page.on("requestfailed", request => {
         // These are not interesting
-        if (request.url().startsWith("data:") || request.url().startsWith("blank:"))
+        if (request.url().startsWith("data:") || request.url().startsWith("blank:")) {
             return;
+        }
 
         const resourceObject = {
             success: false,
@@ -57,8 +59,9 @@ async function getBrowserPage(resources, messages, browser, pageStart) {
         const response = request.response();
 
         // These are not interesting
-        if (response.url().startsWith("data:") || response.url().startsWith("blank:"))
+        if (response.url().startsWith("data:") || response.url().startsWith("blank:")) {
             return;
+        }
 
         const status = response.status();
         const resourceObject = {
@@ -92,117 +95,107 @@ async function getBrowserPage(resources, messages, browser, pageStart) {
     return page;
 }
 
+function parseBrowseRequest(request) {
+    let options = {};
+
+    // Parse input
+    try {
+        options.url = String(request.body.url || "").trim();
+        options.timeout = Number(request.body.timeout) || 60;
+        options.viewport = {
+            width: Number(request.body.viewport && request.body.viewport[0]) || 1024,
+            height: Number(request.body.viewport && request.body.viewport[1]) || 1024,
+        };
+    }
+    catch (err) {
+        throw new ClientError("Error parsing browse request", err);
+    }
+
+    // Sanity check
+    if (!options.url) {
+        throw new ClientError("url is a required request parameter", options);
+    }
+    if (options.timeout < 5 || options.timeout > 300) {
+        throw new ClientError("timeout must be between 5 and 300", options);
+    }
+    if (options.viewport.width < 256 || options.viewport.width > 5000) {
+        throw new ClientError("viewport width must be between 256 and 5000", options);
+    }
+    if (options.viewport.height < 256 || options.viewport.height > 5000) {
+        throw new ClientError("viewport height must be between 256 and 5000", options);
+    }
+
+    return options;
+}
+
 /**
  *
- * @param {object}   request                        HTTP request
- * @param {object}   response                       HTTP response
- * @param {object}   browser                        Chromium browser
+ * @param {object}  options                 Requested options
+ * @param {object}  browser                 Chromium browser
  *
- * @param {object}   marvin                         Marvin environment
- * @param {string}   marvin.instance_type           Marvin instance type
- * @param {string}   marvin.hostname                Hostname of this Marvin
-
- * @param {object}   config                         Application configuration
- * @param {object}   config.marvin                  Configuration for Marvin
- * @param {number}   config.marvin.parallel_tasks   Limit on parallel requests
+ * @param {object}  marvin                  Marvin environment
+ * @param {string}  marvin.instance_type    Marvin instance type
+ * @param {string}  marvin.hostname         Hostname of this Marvin
  *
- * @param {object}   activity                       Activity counters
- * @param {number}   activity.completed_tasks       Number of tasks completed
- * @param {number}   activity.failed_tasks          Number of failed tasks
- * @param {number}   activity.rejected_tasks        Number of rejected tasks
- * @param {number}   activity.running_tasks         Number of tasks currently running (used for rejecting new tasks)
- *
- * @returns {Promise<void>}
+ * @returns {Promise<object>}
  */
-async function postBrowse(request, response, browser, marvin, config, activity) {
+async function doBrowse(options, browser, marvin) {
+    // Perform request
+    let page, result, duration;
     try {
-        let url, pageTimeout, viewport;
+        let resources = [];
+        let messages = [];
+        const start = moment();
 
-        // Parse input
+        let page = await getBrowserPage(resources, messages, browser, start);
+        await page.setViewport(options.viewport);
+        page.setDefaultNavigationTimeout(options.timeout * 1000);
+
+        console.log("Testing", options.url);
+
         try {
-            url = String(request.body.url).trim();
-            pageTimeout = Number(request.body.timeout) || 60;
-            viewport = {
-                width: Number(request.body.viewport && request.body.viewport[0]) || 1024,
-                height: Number(request.body.viewport && request.body.viewport[1]) || 1024,
-            };
+            result = await page.goto(options.url);
+            duration = (moment() - start) / 1000;
         }
         catch (err) {
-            activity.failed_tasks++;
-            return sendError(response, "Error parsing request", 400);
-        }
-
-        // Sanity check
-        if (!url) {
-            activity.failed_tasks++;
-            return sendError(response, "url is a required request parameter", 400);
-        }
-
-        // Check load limits
-        if (activity.running_tasks >= config.marvin.parallel_tasks) {
-            activity.rejected_tasks++;
-            return sendError(response, "We cannot accept more requests at this time", 429);
-        }
-
-        // Update stats
-        activity.running_tasks++;
-
-        // Perform request
-        try {
-            let resources = [];
-            let messages = [];
-            const start = moment();
-
-            let page = await getBrowserPage(resources, messages, browser, start);
-            await page.setViewport(viewport);
-
-            console.log("Testing", url);
-
-            await page.goto(url);
-            const duration = (moment() - start) / 1000;
-
-            const screenshot = Buffer.from(await page.screenshot({
-                type: "png",
-                omitBackground: false,
-            })).toString("base64");
-
-            response.json({
-                test: {
-                    type: marvin.instance_type,
-                    host: marvin.hostname,
-                },
-                request: {
-                    url: url,
-                    viewport: [viewport.width, viewport.height],
-                    timeout: pageTimeout,
-                },
-                success: true,
-                reason: "Request completed successfully",
-                start: start.toISOString(),
-                duration: duration,
-                console: messages,
-                resources: resources,
-                image: screenshot,
-            });
-
-            activity.completed_tasks++;
-
-            page.close();
-        }
-        catch (err) {
-            activity.failed_tasks++;
             if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
-                return sendError(response, "invalid hostname", 400, err);
+                throw new ClientError("invalid hostname", 400, err);
             } else {
-                return sendError(response, "unexpected error while processing request", 500, err);
+                throw err;
             }
         }
-    } finally {
-        // Make sure we remember that we are done
-        activity.running_tasks--;
+
+        if (!result.ok()) {
+            const status = result.status();
+            throw new ClientError((http.STATUS_CODES[status] || "Unknown error") + " (" + status + ") error while retrieving URL", status);
+        }
+
+        const screenshot = Buffer.from(await page.screenshot({
+            type: "png",
+            omitBackground: false,
+        })).toString("base64");
+
+        return {
+            test: {
+                type: marvin.instance_type,
+                host: marvin.hostname,
+            },
+            request: options,
+            start: start.toISOString(),
+            duration: duration,
+            console: messages,
+            resources: resources,
+            image: screenshot,
+        };
+    }
+    finally {
+        if (page) {
+            page.close();
+        }
     }
 }
 
 module.exports = {
-    postBrowse
+    parseBrowseRequest,
+    doBrowse,
 };

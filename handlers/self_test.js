@@ -1,9 +1,5 @@
-const sendError = require("../utils/send_error");
-
 /**
  *
- * @param {object}   request                        HTTP request
- * @param {object}   response                       HTTP response
  * @param {object}   browser                        Chromium browser
  *
  * @param {object}   marvin                         Marvin environment
@@ -19,18 +15,16 @@ const sendError = require("../utils/send_error");
  * @param {object}   config.marvin                  Configuration for Marvin
  * @param {number}   config.marvin.parallel_tasks   Limit on parallel requests
  *
- * @returns {Promise<void>}
+ * @returns {Promise<object>}
  */
-async function getSelfTest(request, response, browser, marvin, config) {
+async function getSelfTest(browser, marvin, config) {
     console.log("Running self-test");
 
-    try {
-        response.send("No checks yet");
-    } catch (err) {
-        sendError(response, "Unexpected error", 500, err);
-    }
+    return {
+        message: "No checks yet",
+    };
 }
 
 module.exports = {
-    getSelfTest
+    getSelfTest,
 };
