@@ -114,7 +114,7 @@ async function getBrowserPage(resources, messages, browser, pageStart) {
  *
  * @returns {Promise<void>}
  */
-async function postRequest(request, response, browser, marvin, config, activity) {
+async function postBrowse(request, response, browser, marvin, config, activity) {
     try {
         let url, pageTimeout, viewport;
 
@@ -204,5 +204,5 @@ async function postRequest(request, response, browser, marvin, config, activity)
 }
 
 module.exports = {
-    postRequest
+    postBrowse
 };

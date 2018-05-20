@@ -6,7 +6,7 @@ const defaultGateway = require("default-gateway");
 const {promisify} = require('util');
 
 const {getInfo} = require("./handlers/info");
-const {postRequest} = require("./handlers/request");
+const {postBrowse} = require("./handlers/browse");
 const {getSelfTest} = require("./handlers/self_test");
 const {postPing} = require('./handlers/ping');
 
@@ -43,8 +43,8 @@ let activity = {
     running_tasks: 0,
 };
 
-app.post("/request", async (request, response) => {
-    await postRequest(request, response, browser, marvin, config, activity);
+app.post("/browse", async (request, response) => {
+    await postBrowse(request, response, browser, marvin, config, activity);
 });
 
 app.get("/info", async (request, response) => {
