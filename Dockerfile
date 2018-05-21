@@ -9,8 +9,9 @@ RUN curl --silent --location https://rpm.nodesource.com/setup_9.x | bash -
 # Install packages
 RUN yum install -y nodejs make gcc-c++
 
-# Add our sources and install all dependencies
-COPY . /root/marvin/
+# Add our package info and install all dependencies
+COPY package.json /root/marvin/
+COPY package-lock.json /root/marvin/
 RUN cd /root/marvin && npm install
 
 #-------------------------------------
@@ -30,9 +31,9 @@ RUN yum install -y `yum deplist chromium chromium-common chromium-libs chromium-
 # Install packages
 RUN yum install -y nodejs httpie
 
-# Add our sources and install all dependencies
+# Get our dependencies from builder and add our own sources
 COPY --from=builder /root/marvin/ /root/marvin/
-RUN cd /root/marvin && npm install
+COPY . /root/marvin/
 
 # And we're ready to run Marvin
 ENV HOME /root
