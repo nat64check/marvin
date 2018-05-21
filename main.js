@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const Puppeteer = require("puppeteer");
 const express = require("express");
 const os = require("os");

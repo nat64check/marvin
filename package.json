@@ -1,7 +1,38 @@
 {
   "name": "marvin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "NAT64Check Marvin",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "nat64check"
+  ],
+  "homepage": "https://www.nat64check.org/",
+  "bugs": {
+    "email": "bugs@nat64check.org",
+    "url": "https://github.com/nat64check/marvin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nat64check/marvin.git"
+  },
+  "author": {
+    "name": "Sander Steffann",
+    "email": "sander@steffann.nl",
+    "url": "https://www.steffann.nl/"
+  },
+  "contributors": [
+    {
+      "name": "Jan Žorž",
+      "email": "jan@go6.si"
+    },
+    {
+      "name": "Musa Stephen Honlue",
+      "email": "honlue@gmail.com"
+    }
+  ],
+  "bin": {
+    "marvin": "./main.js"
+  },
   "scripts": {
     "debug": "env DEBUG='puppeteer:*' node main.js",
     "start": "node main.js"
@@ -12,6 +43,7 @@
     "express": "^4.16.2",
     "moment": "^2.22.0",
     "net-ping": "^1.2.1",
+    "npm": "^6.0.1",
     "puppeteer": "^1.4.0"
   }
 }
