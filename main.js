@@ -226,7 +226,7 @@ app.get("/self-test", async (request, response) => {
         } else if (have_ipv4) {
             console.log("Only IPv4 detected, running v4-only");
             marvin.instance_type = "v4-only";
-        } else if (have_ipv4) {
+        } else if (have_ipv6) {
             console.log("Only IPv6 detected, running v6-only");
             marvin.instance_type = "v6-only";
         } else {
