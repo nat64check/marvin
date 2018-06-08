@@ -2,8 +2,8 @@ const moment = require("moment");
 const http = require("http");
 const {ClientError} = require("../utils");
 
-async function getBrowserPage(resources, messages, browser, pageStart) {
-    const page = await browser.newPage();
+async function getBrowserPage(resources, messages, context, pageStart) {
+    const page = await context.newPage();
 
     page.on("dialog", async dialog => {
         await dialog.dismiss();
@@ -141,13 +141,14 @@ function parseBrowseRequest(request) {
  */
 async function doBrowse(options, browser, marvin) {
     // Perform request
-    let page, result, duration;
+    let context, page, result, duration;
     try {
         let resources = [];
         let messages = [];
         const start = moment();
 
-        let page = await getBrowserPage(resources, messages, browser, start);
+        context = await browser.createIncognitoBrowserContext();
+        page = await getBrowserPage(resources, messages, context, start);
         await page.setViewport(options.viewport);
         page.setDefaultNavigationTimeout(options.timeout * 1000);
 
@@ -189,8 +190,8 @@ async function doBrowse(options, browser, marvin) {
         };
     }
     finally {
-        if (page) {
-            page.close();
+        if (context) {
+            context.close();
         }
     }
 }
