@@ -163,6 +163,11 @@ app.get("/self-test", async (request, response) => {
                         continue;
                     }
 
+                    // As long as docker doesn't do IPv6-only networks we use 255/8 as a dummy
+                    if (if_address.address.startsWith("255.")) {
+                        continue;
+                    }
+
                     marvin.ipv4_addresses.push(if_address.address);
                     break;
 
