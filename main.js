@@ -198,8 +198,8 @@ app.get("/self-test", async (request, response) => {
     marvin.dns_servers = dns.getServers();
     marvin.hostname = os.hostname();
 
-    const have_ipv4 = marvin.ipv4_addresses && marvin.ipv4_gateway;
-    const have_ipv6 = marvin.ipv6_addresses && marvin.ipv6_gateway;
+    const have_ipv4 = marvin.ipv4_addresses.length && marvin.ipv4_gateway;
+    const have_ipv6 = marvin.ipv6_addresses.length && marvin.ipv6_gateway;
 
     try {
         // noinspection JSUnresolvedVariable
