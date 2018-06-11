@@ -5,6 +5,7 @@ const os = require("os");
 const dns = require("dns");
 const defaultGateway = require("default-gateway");
 const {promisify} = require("util");
+const exec = promisify(require('child_process').exec);
 const {sendError, sendException} = require("./utils");
 
 const {getInfo} = require("./handlers/info");
@@ -152,6 +153,30 @@ app.get("/self-test", async (request, response) => {
         // Ensure that the browser process is stopped properly
         browser.close();
     });
+    
+    // Check environment and remove network addressed that we don't want
+    const mode = process.env.MARVIN_MODE;
+    if (mode) {
+        switch (mode) {
+            case "dual-stack":
+                break;
+                
+            case "v4only":
+                console.warn("Remove IPv6 networking");
+                await exec("ip -6 address flush dev eth0");
+                break;
+            
+            case "nat64":
+            case "v6only":
+                console.warn("Remove IPv4 networking");
+                await exec("ip -4 address flush dev eth0");
+                break;
+            
+            default:
+                console.error("Invalid MARVIN_MODE specified: " + mode);
+                process.exit(1);
+        }
+    }
 
     const interfaces = os.networkInterfaces();
     for (let if_name of Object.keys(interfaces)) {
@@ -160,11 +185,6 @@ app.get("/self-test", async (request, response) => {
             switch (if_address.family) {
                 case "IPv4":
                     if (if_address.address.startsWith("127.")) {
-                        continue;
-                    }
-
-                    // As long as docker doesn't do IPv6-only networks we use 255/8 as a dummy
-                    if (if_address.address.startsWith("255.")) {
                         continue;
                     }
 
@@ -212,6 +232,10 @@ app.get("/self-test", async (request, response) => {
 
         // Lookup successful: ipv4only has IPv6 addresses: DNS64
         console.log("ipv4only.arpa has IPv6 addresses: assuming NAT64");
+        if (mode && mode !== "nat64") {
+            console.error("NAT64 detected, but we we were told to run in " + mode + "mode");
+            process.exit(1);
+        }
         if (have_ipv4 || !have_ipv6) {
             console.error("We should have IPv6-only connectivity when in NAT64 mode");
             process.exit(1);
@@ -222,13 +246,25 @@ app.get("/self-test", async (request, response) => {
         // Lookup not successful: no DNS64
         if (have_ipv4 && have_ipv6) {
             console.log("Both IPv4 and IPv6 detected, running dual-stack");
+            if (mode && mode !== "dual-stack") {
+                console.error("Dual-stack detected, but we we were told to run in " + mode + "mode");
+                process.exit(1);
+            }
             marvin.instance_type = "dual-stack";
         } else if (have_ipv4) {
-            console.log("Only IPv4 detected, running v4-only");
-            marvin.instance_type = "v4-only";
+            console.log("Only IPv4 detected, running v4only");
+            if (mode && mode !== "v4only") {
+                console.error("v4only detected, but we we were told to run in " + mode + "mode");
+                process.exit(1);
+            }
+            marvin.instance_type = "v4only";
         } else if (have_ipv6) {
-            console.log("Only IPv6 detected, running v6-only");
-            marvin.instance_type = "v6-only";
+            console.log("Only IPv6 detected, running v6only");
+            if (mode && mode !== "v6only") {
+                console.error("v6only detected, but we we were told to run in " + mode + "mode");
+                process.exit(1);
+            }
+            marvin.instance_type = "v6only";
         } else {
             console.error("Neither IPv4 nor IPv6 detected, unable to continue");
             process.exit(1);
