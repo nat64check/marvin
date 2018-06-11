@@ -157,6 +157,9 @@ app.get("/self-test", async (request, response) => {
     // Check environment and remove network addressed that we don't want
     const mode = process.env.MARVIN_MODE;
     if (mode) {
+        console.warn("Removing nameserver 127.0.0.11");
+        await exec("cp /etc/resolv.conf /tmp/resolv.conf; sed '/nameserver 127\.0\.0\.11/d' /tmp/resolv.conf > /etc/resolv.conf");
+
         switch (mode) {
             case "dual-stack":
                 break;
@@ -220,7 +223,7 @@ app.get("/self-test", async (request, response) => {
     }
 
     // noinspection JSUnresolvedFunction
-    marvin.dns_servers = dns.getServers();
+    marvin.dns_servers = dns.getServers().filter((addr) => addr !== '127.0.0.11');
     marvin.hostname = os.hostname();
 
     const have_ipv4 = marvin.ipv4_addresses.length && marvin.ipv4_gateway;
