@@ -160,6 +160,10 @@ async function doBrowse(options, browser, marvin, status) {
         status.on('error', onError);
         errorSeen = status.last_error;
 
+        if (errorSeen) {
+            throw new ServerError("experiencing some problems, please try again later", errorSeen, 503);
+        }
+
         context = await browser.createIncognitoBrowserContext();
         page = await getBrowserPage(resources, messages, context, start);
         await page.setViewport(options.viewport);
@@ -173,7 +177,7 @@ async function doBrowse(options, browser, marvin, status) {
         }
         catch (err) {
             if (errorSeen) {
-                throw new ServerError("dubious connectivity during test, please try again", errorSeen, 503);
+                throw new ServerError("dubious connectivity during test, please try again later", errorSeen, 503);
             }
 
             if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
@@ -184,7 +188,7 @@ async function doBrowse(options, browser, marvin, status) {
         }
 
         if (errorSeen) {
-            throw new ServerError("dubious connectivity during test, please try again", errorSeen, 503);
+            throw new ServerError("dubious connectivity during test, please try again later", errorSeen, 503);
         }
 
         if (!result.ok()) {
