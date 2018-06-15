@@ -166,13 +166,13 @@ app.get("/self-test", async (request, response) => {
                 
             case "v4only":
                 console.warn("Remove IPv6 networking");
-                await exec("ip -6 address flush dev eth0");
+                await exec("ip -6 route del default dev eth0");
                 break;
             
             case "nat64":
             case "v6only":
                 console.warn("Remove IPv4 networking");
-                await exec("ip -4 address flush dev eth0");
+                await exec("ip -4 route del default dev eth0");
                 break;
             
             default:
