@@ -1,3 +1,5 @@
+const my_package = require("../package");
+
 /**
  * Show information about this Marvin
  *
@@ -27,7 +29,7 @@ async function getInfo(browser, marvin, config, activity) {
 
     return {
         type: "Puppeteer",
-        version: [0, 2, 0],
+        version: my_package.version.split('.').map(i => parseInt(i, 10)),
         browser: {
             name: browser_version.split("/")[0],
             version: browser_version.split("/")[1].split("."),
