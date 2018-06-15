@@ -1,4 +1,7 @@
+"use strict";
+
 const {MarvinError, ClientError, ServerError} = require("./exceptions");
+const {MarvinStatus} = require("./event");
 const {sendError, sendException} = require("./send_error");
 
 module.exports = {
@@ -6,6 +9,9 @@ module.exports = {
     MarvinError,
     ClientError,
     ServerError,
+
+    // Events
+    MarvinStatus,
 
     // Error functions
     sendError,

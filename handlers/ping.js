@@ -1,3 +1,5 @@
+"use strict";
+
 const dns = require("dns");
 const ping = require("net-ping");
 const {promisify} = require("util");

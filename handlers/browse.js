@@ -1,6 +1,8 @@
+"use strict";
+
 const moment = require("moment");
 const http = require("http");
-const {ClientError} = require("../utils");
+const {ClientError, ServerError} = require("../utils");
 
 async function getBrowserPage(resources, messages, context, pageStart) {
     const page = await context.newPage();
@@ -130,22 +132,33 @@ function parseBrowseRequest(request) {
 
 /**
  *
- * @param {object}  options                 Requested options
- * @param {object}  browser                 Chromium browser
+ * @param {object}          options                 Requested options
+ * @param {object}          browser                 Chromium browser
  *
- * @param {object}  marvin                  Marvin environment
- * @param {string}  marvin.instance_type    Marvin instance type
- * @param {string}  marvin.hostname         Hostname of this Marvin
+ * @param {object}          marvin                  Marvin environment
+ * @param {string}          marvin.instance_type    Marvin instance type
+ * @param {string}          marvin.hostname         Hostname of this Marvin
+ *
+ * @param {MarvinStatus|EventEmitter}    status                  Event channel for status updates
  *
  * @returns {Promise<object>}
  */
-async function doBrowse(options, browser, marvin) {
+async function doBrowse(options, browser, marvin, status) {
     // Perform request
-    let context, page, result, duration;
+    let context, page, result, duration, errorSeen;
+
+    const onError = (reason) => {
+        errorSeen = reason;
+    };
+
     try {
         let resources = [];
         let messages = [];
         const start = moment();
+
+        // Monitor for errors while browsing
+        status.on('error', onError);
+        errorSeen = status.last_error;
 
         context = await browser.createIncognitoBrowserContext();
         page = await getBrowserPage(resources, messages, context, start);
@@ -159,11 +172,19 @@ async function doBrowse(options, browser, marvin) {
             duration = (moment() - start) / 1000;
         }
         catch (err) {
+            if (errorSeen) {
+                throw new ServerError("dubious connectivity during test, please try again", errorSeen, 503);
+            }
+
             if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
                 throw new ClientError("invalid hostname", 400, err);
             } else {
                 throw err;
             }
+        }
+
+        if (errorSeen) {
+            throw new ServerError("dubious connectivity during test, please try again", errorSeen, 503);
         }
 
         if (!result.ok()) {
@@ -193,6 +214,9 @@ async function doBrowse(options, browser, marvin) {
         if (context) {
             context.close();
         }
+
+        // Stop listening to status
+        status.removeListener('error', onError);
     }
 }
 

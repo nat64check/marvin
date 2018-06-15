@@ -1,28 +1,30 @@
+"use strict";
+
 class MarvinError extends Error {
     constructor(message, reason) {
         // noinspection JSCheckFunctionSignatures
         super(message);
 
-        this.reason = reason ? reason : message;
+        this.reason = reason;
         this.httpStatus = 500;
     }
 }
 
 class ClientError extends MarvinError {
-    constructor(message, reason) {
+    constructor(message, reason, code) {
         super(message, reason);
 
         // noinspection JSUnusedGlobalSymbols
-        this.httpStatus = 400;
+        this.httpStatus = code || 400;
     }
 }
 
 class ServerError extends MarvinError {
-    constructor(message, reason) {
+    constructor(message, reason, code) {
         super(message, reason);
 
         // noinspection JSUnusedGlobalSymbols
-        this.httpStatus = 500;
+        this.httpStatus = code || 500;
     }
 }
 

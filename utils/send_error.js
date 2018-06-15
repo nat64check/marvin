@@ -1,3 +1,5 @@
+"use strict";
+
 const {MarvinError} = require("./exceptions");
 
 /**

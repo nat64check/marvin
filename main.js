@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+"use strict";
+
 const Puppeteer = require("puppeteer");
 const express = require("express");
 const os = require("os");
@@ -6,7 +8,7 @@ const dns = require("dns");
 const defaultGateway = require("default-gateway");
 const {promisify} = require("util");
 const exec = promisify(require('child_process').exec);
-const {sendError, sendException} = require("./utils");
+const {sendError, sendException, MarvinStatus} = require("./utils");
 
 const {getInfo} = require("./handlers/info");
 const {parseBrowseRequest, doBrowse} = require("./handlers/browse");
@@ -37,6 +39,9 @@ let marvin = {
     dns_servers: [],
     hostname: "",
 };
+
+// Event channel for status updates
+const status = new MarvinStatus();
 
 // Processing counters
 let activity = {
@@ -75,7 +80,7 @@ app.post("/browse", async (request, response) => {
     try {
         activity.browse.running++;
         const options = parseBrowseRequest(request);
-        const result = await doBrowse(options, browser, marvin);
+        const result = await doBrowse(options, browser, marvin, status);
         activity.browse.completed++;
         response.json(Object.assign({success: true}, result));
     }
@@ -136,10 +141,12 @@ app.get("/self-test", async (request, response) => {
     try {
         const result = await getSelfTest(browser, marvin, config);
         activity.self_test.completed++;
+        status.ok();
         response.json(Object.assign({success: true}, result));
     }
     catch (err) {
         activity.self_test.failed++;
+        status.error("self-test failed");
         sendException(response, err);
     }
 });
@@ -153,7 +160,7 @@ app.get("/self-test", async (request, response) => {
         // Ensure that the browser process is stopped properly
         browser.close();
     });
-    
+
     // Check environment and remove network addressed that we don't want
     const mode = process.env.MARVIN_MODE;
     if (mode) {
@@ -163,18 +170,18 @@ app.get("/self-test", async (request, response) => {
         switch (mode) {
             case "dual-stack":
                 break;
-                
+
             case "v4only":
                 console.warn("Remove IPv6 networking");
                 await exec("ip -6 route del default dev eth0");
                 break;
-            
+
             case "nat64":
             case "v6only":
                 console.warn("Remove IPv4 networking");
                 await exec("ip -4 route del default dev eth0");
                 break;
-            
+
             default:
                 console.error("Invalid MARVIN_MODE specified: " + mode);
                 process.exit(1);

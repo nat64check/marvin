@@ -1,3 +1,5 @@
+"use strict";
+
 const my_package = require("../package");
 
 /**
