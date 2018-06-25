@@ -161,12 +161,24 @@ app.get("/self-test", async (request, response) => {
         browser.close();
     });
 
+    const marvin_dns = process.env.MARVIN_DNS;
+    if (marvin_dns) {
+        console.warn("Replacing nameservers with " + marvin_dns);
+        await exec("sed '/nameserver .*/d' /etc/resolv.conf > /tmp/resolv.conf");
+        const nameservers = marvin_dns.split(',');
+        for (let nameserver of nameservers) {
+            nameserver = nameserver.trim();
+            await exec("echo nameserver " + nameserver + " >> /tmp/resolv.conf");
+        }
+        await exec("cat /tmp/resolv.conf > /etc/resolv.conf");
+    } else {
+        console.warn("Removing nameserver 127.0.0.11");
+        await exec("cp /etc/resolv.conf /tmp/resolv.conf; sed '/nameserver 127\.0\.0\.11/d' /tmp/resolv.conf > /etc/resolv.conf");
+    }
+
     // Check environment and remove network addressed that we don't want
     const mode = process.env.MARVIN_MODE;
     if (mode) {
-        console.warn("Removing nameserver 127.0.0.11");
-        await exec("cp /etc/resolv.conf /tmp/resolv.conf; sed '/nameserver 127\.0\.0\.11/d' /tmp/resolv.conf > /etc/resolv.conf");
-
         switch (mode) {
             case "dual-stack":
                 break;
