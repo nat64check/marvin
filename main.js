@@ -106,7 +106,7 @@ app.get("/info", async (request, response) => {
 app.post("/ping4", async (request, response) => {
     try {
         activity.ping4.running++;
-        const options = parsePingRequest(request.body);
+        const options = parsePingRequest(request);
         const result = await doPing(4, options);
         activity.ping4.completed++;
         response.json(Object.assign({success: true}, result));
