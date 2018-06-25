@@ -32,7 +32,7 @@ RUN yum install -y epel-release \
  && yum install -y nodejs httpie curl cabextract xorg-x11-font-utils fontconfig \
 
  # Install base fonts
- && yum install https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+ && yum install -y https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 
 # Get our dependencies from builder and add our own sources
 COPY --from=builder /root/marvin/ /root/marvin/
