@@ -181,7 +181,7 @@ async function doBrowse(options, browser, marvin, status) {
             }
 
             if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
-                throw new ClientError("invalid hostname", 400, err);
+                throw new ClientError("invalid hostname", err, 400);
             } else {
                 throw err;
             }
