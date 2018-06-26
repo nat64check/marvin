@@ -73,7 +73,7 @@ app.post("/browse", async (request, response) => {
     // Check load limits
     if (activity.browse.running >= config.marvin.parallel_tasks) {
         activity.browse.rejected++;
-        sendError(response, "We cannot accept more requests at this time", 429, activity.browse);
+        sendError(response, "We cannot accept more requests at this time", 429, activity.browse.running);
         return;
     }
 
