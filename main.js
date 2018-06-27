@@ -7,6 +7,10 @@ const os = require("os");
 const dns = require("dns");
 const defaultGateway = require("default-gateway");
 const {promisify} = require("util");
+/**
+ * Promise version of exec
+ * @type Function
+ */
 const exec = promisify(require('child_process').exec);
 const {sendError, sendException, MarvinStatus} = require("./utils");
 
@@ -40,7 +44,11 @@ let marvin = {
     hostname: "",
 };
 
-// Event channel for status updates
+/**
+ * Event channel for status updates
+ * @type MarvinStatus
+ */
+
 const status = new MarvinStatus();
 
 // Processing counters
