@@ -20,7 +20,7 @@
  * @returns {Promise<object>}
  */
 async function getSelfTest(browser, marvin, config) {
-    console.log("Running self-test");
+    // console.log("Running self-test");
 
     return {
         message: "No checks yet",

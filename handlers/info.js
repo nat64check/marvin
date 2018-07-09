@@ -25,7 +25,7 @@ const my_package = require("../package");
  * @returns {Promise<object>}
  */
 async function getInfo(browser, marvin, config, activity) {
-    console.log("Showing info");
+    // console.log("Showing info");
 
     const browser_version = await browser.version();
 
