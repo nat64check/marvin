@@ -196,6 +196,8 @@ async function doBrowse(options, browser, marvin, status) {
             throw new ClientError((http.STATUS_CODES[status] || "Unknown error") + " (" + status + ") error while retrieving URL", status);
         }
 
+        // Wait one extra second before taking that screenshot, some pages are annoyingly dynamic
+        await new Promise(res => setTimeout(res, 1000));
         const screenshot = Buffer.from(await page.screenshot({
             type: "png",
             omitBackground: false,
