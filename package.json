@@ -1,6 +1,6 @@
 {
   "name": "marvin",
-  "version": "0.7.3",
+  "version": "0.7.5",
   "description": "NAT64Check Marvin",
   "license": "BSD-3-Clause",
   "keywords": [
@@ -41,8 +41,9 @@
     "body-parser": "^1.18.3",
     "default-gateway": "^2.7.2",
     "express": "^4.16.2",
+    "ip-address": "^5.8.9",
     "moment": "^2.22.2",
     "net-ping": "^1.2.3",
-    "puppeteer": "^1.5.0"
+    "puppeteer": "^1.6.1"
   }
 }

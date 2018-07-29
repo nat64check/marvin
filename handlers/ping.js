@@ -4,6 +4,7 @@ const dns = require("dns");
 const ping = require("net-ping");
 const {promisify} = require("util");
 const {ClientError, ServerError} = require("../utils");
+const {Address4, Address6} = require('ip-address');
 
 async function pingOnce(session, target) {
     return new Promise(resolve => {
@@ -76,31 +77,39 @@ async function doPing(family, options) {
         // noinspection JSUnresolvedVariable
         resolver = promisify(dns.resolve4);
         payloadSize = options.size - 20;
+        address = new Address4(options.target);
     } else if (family === 6) {
         // noinspection JSUnresolvedVariable
         resolver = promisify(dns.resolve6);
         payloadSize = options.size - 40;
+        address = new Address6(options.target);
     } else {
         throw new ServerError("Unknown address family", family);
     }
 
-    console.log("Pinging IPv" + family + ": " + options.target);
-
-    try {
-        addresses = await resolver(options.target);
-        address = addresses[Math.floor(Math.random() * addresses.length)];
-    }
-    catch (err) {
-        if (err.code === "ENOTFOUND") {
-            throw new ClientError("Target does not exist", options.target);
-        } else if (err.code === "EBADNAME") {
-            throw new ClientError("Invalid target hostname", options.target);
-        } else if (err.code === "ESERVFAIL") {
-            throw new ClientError("Server error while resolving target hostname", options.target);
-        } else {
-            throw new ClientError("Unable to resolve target hostname", err);
+    if (address.isValid()) {
+        // We got a valid address literal, just use it
+        address = address.correctForm();
+    } else {
+        // It's not a valid address literal, try to resolve it as a hostname
+        try {
+            addresses = await resolver(options.target);
+            address = addresses[Math.floor(Math.random() * addresses.length)];
+        }
+        catch (err) {
+            if (err.code === "ENOTFOUND") {
+                throw new ClientError("Target does not exist", options.target);
+            } else if (err.code === "EBADNAME") {
+                throw new ClientError("Invalid target hostname", options.target);
+            } else if (err.code === "ESERVFAIL") {
+                throw new ClientError("Server error while resolving target hostname", options.target);
+            } else {
+                throw new ClientError("Unable to resolve target hostname", err);
+            }
         }
     }
+
+    console.log("Pinging IPv" + family + ": " + options.target + ' (' + address + ')');
 
     if (!address) {
         throw new ClientError("No IPv" + family + " addresses found");
