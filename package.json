@@ -44,6 +44,7 @@
     "ip-address": "^5.8.9",
     "moment": "^2.22.2",
     "net-ping": "^1.2.3",
+    "pngjs": "^3.3.3",
     "puppeteer": "^1.6.1"
   }
 }

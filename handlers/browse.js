@@ -146,7 +146,7 @@ async function doBrowse(options, browser, marvin, status) {
     // Perform request
     let context, page, duration, errorSeen, success;
 
-    const onError = (reason) => {
+    const onFail = (reason) => {
         errorSeen = reason;
     };
 
@@ -156,8 +156,12 @@ async function doBrowse(options, browser, marvin, status) {
         const start = moment();
 
         // Monitor for errors while browsing
-        status.on('error', onError);
-        errorSeen = status.last_error;
+        if (status) {
+            status.on('fail', onFail);
+            errorSeen = status.last_error;
+        } else {
+            errorSeen = false;
+        }
 
         if (errorSeen) {
             throw new ServerError("experiencing some problems, please try again later", errorSeen, 503);
@@ -168,7 +172,9 @@ async function doBrowse(options, browser, marvin, status) {
         await page.setViewport(options.viewport);
         page.setDefaultNavigationTimeout(options.timeout * 1000);
 
-        console.log("Testing", options.url);
+        if (!options.silent) {
+            console.log("Testing", options.url);
+        }
 
         try {
             await page.goto(options.url);
@@ -210,7 +216,9 @@ async function doBrowse(options, browser, marvin, status) {
         }
 
         // Stop listening to status
-        status.removeListener('error', onError);
+        if (status) {
+            status.removeListener('fail', onFail);
+        }
     }
 }
 

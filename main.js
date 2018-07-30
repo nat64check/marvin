@@ -148,14 +148,14 @@ app.post("/ping6", async (request, response) => {
 
 app.get("/self-test", async (request, response) => {
     try {
-        const result = await getSelfTest(browser, marvin, config);
+        const result = await getSelfTest(browser, marvin);
         activity.self_test.completed++;
         status.ok();
         response.json(Object.assign({success: true}, result));
     }
     catch (err) {
         activity.self_test.failed++;
-        status.error("self-test failed");
+        status.fail("self-test failed");
         sendException(response, err);
     }
 });
