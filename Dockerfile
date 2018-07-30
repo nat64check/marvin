@@ -24,13 +24,13 @@ EXPOSE 3001
 # Add extra repositories that we need
 RUN yum install -y epel-release \
  && curl --silent --location https://rpm.nodesource.com/setup_9.x | bash - \
-
+ \
  # Puppeteer installs it's own Chromium, but we do need to install the dependencies
  && yum install -y `yum deplist chromium chromium-common chromium-libs chromium-libs-media | awk '/provider:/ {print $2}' | fgrep -v chromium | sort -u` \
-
+ \
  # Install packages
  && yum install -y nodejs httpie curl cabextract xorg-x11-font-utils fontconfig \
-
+ \
  # Install base fonts
  && yum install -y https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 
