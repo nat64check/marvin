@@ -94,6 +94,7 @@ app.post("/browse", async (request, response) => {
     }
     catch (err) {
         activity.browse.failed++;
+        console.error(err.stack);
         sendException(response, err);
     }
     finally {
