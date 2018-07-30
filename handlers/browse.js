@@ -1,7 +1,6 @@
 "use strict";
 
 const moment = require("moment");
-const http = require("http");
 const {ClientError, ServerError} = require("../utils");
 
 async function getBrowserPage(resources, messages, context, pageStart) {
@@ -145,7 +144,7 @@ function parseBrowseRequest(request) {
  */
 async function doBrowse(options, browser, marvin, status) {
     // Perform request
-    let context, page, result, duration, errorSeen;
+    let context, page, duration, errorSeen, success;
 
     const onError = (reason) => {
         errorSeen = reason;
@@ -172,28 +171,16 @@ async function doBrowse(options, browser, marvin, status) {
         console.log("Testing", options.url);
 
         try {
-            result = await page.goto(options.url);
+            await page.goto(options.url);
             duration = (moment() - start) / 1000;
+            success = true;
         }
         catch (err) {
-            if (errorSeen) {
-                throw new ServerError("dubious connectivity during test, please try again later", errorSeen, 503);
-            }
-
-            if (err.message.includes("ERR_NAME_NOT_RESOLVED")) {
-                throw new ClientError("invalid hostname", err, 400);
-            } else {
-                throw err;
-            }
+            success = false;
         }
 
         if (errorSeen) {
             throw new ServerError("dubious connectivity during test, please try again later", errorSeen, 503);
-        }
-
-        if (!result.ok()) {
-            const status = result.status();
-            throw new ClientError((http.STATUS_CODES[status] || "Unknown error") + " (" + status + ") error while retrieving URL", status);
         }
 
         // Wait one extra second before taking that screenshot, some pages are annoyingly dynamic
@@ -204,6 +191,7 @@ async function doBrowse(options, browser, marvin, status) {
         })).toString("base64");
 
         return {
+            success: success,
             test: {
                 type: marvin.instance_type,
                 host: marvin.hostname,
