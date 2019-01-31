@@ -20,6 +20,7 @@ const {getSelfTest} = require("./handlers/self_test");
 const {parsePingRequest, doPing} = require("./handlers/ping");
 
 const config = require("./config");
+const my_package = require('./package');
 const port = config.puppeteer.port;
 const listen_address = config.puppeteer.host;
 
@@ -161,6 +162,7 @@ app.get("/self-test", async (request, response) => {
 });
 
 (async () => {
+    console.log("Starting Marvin " + my_package.version);
     browser = await Puppeteer.launch({
         args: config.puppeteer.args,
     });

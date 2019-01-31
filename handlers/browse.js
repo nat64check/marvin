@@ -212,7 +212,14 @@ async function doBrowse(options, browser, marvin, status) {
     }
     finally {
         if (context) {
-            context.close();
+            let pages = await context.pages();
+            for (let page of pages) {
+                console.log("Closing page " + page.url());
+                await page.close();
+            }
+            console.log("Closing context");
+            await context.close();
+            console.log("Context closed");
         }
 
         // Stop listening to status
