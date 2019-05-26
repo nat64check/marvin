@@ -41,7 +41,7 @@
     "body-parser": "^1.18.3",
     "default-gateway": "^2.7.2",
     "express": "^4.16.2",
-    "ip-address": "^5.8.9",
+    "ip-address": "^5.9.0",
     "moment": "^2.22.2",
     "net-ping": "^1.2.3",
     "pngjs": "^3.3.3",
