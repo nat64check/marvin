@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "body-parser": "^1.18.3",
-    "default-gateway": "^2.7.2",
+    "default-gateway": "^5.0.2",
     "express": "^4.16.2",
     "ip-address": "^5.8.9",
     "moment": "^2.22.2",
