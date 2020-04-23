@@ -45,6 +45,6 @@
     "moment": "^2.22.2",
     "net-ping": "^1.2.3",
     "pngjs": "^3.4.0",
-    "puppeteer": "^1.17.0"
+    "puppeteer": "^3.0.1"
   }
 }
