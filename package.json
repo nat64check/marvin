@@ -42,7 +42,7 @@
     "default-gateway": "^5.0.2",
     "express": "^4.17.1",
     "ip-address": "^5.9.2",
-    "moment": "^2.22.2",
+    "moment": "^2.29.0",
     "net-ping": "^1.2.3",
     "pngjs": "^3.4.0",
     "puppeteer": "^1.17.0"
